@@ -7,10 +7,14 @@ authors = [
     { name = "Bernat Rubio", email = "bernat.github@proton.me" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "datetime>=6.0",
+    "dotenv>=0.9.9",
+    "requests>=2.34.2",
+]
 
 [project.scripts]
-good-first-issue = "good_first_issue:main"
+good-first-issue = "good_first_issue.main:main"
 
 [build-system]
 requires = ["uv_build>=0.13.5,<0.14.0"]
