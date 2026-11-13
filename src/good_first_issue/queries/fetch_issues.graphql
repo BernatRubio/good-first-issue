@@ -1,0 +1,37 @@
+query FetchIssues(
+    $query: String!
+    $cursor: String
+    $labels: [String!]
+    $since: DateTime!
+) {
+    search(query: $query, type: REPOSITORY, first: 20, after: $cursor) {
+        pageInfo {
+            endCursor
+            hasNextPage
+        }
+        nodes {
+            ... on Repository {
+                nameWithOwner
+                stargazerCount
+                issues(
+                    labels: $labels
+                    states: [OPEN]
+                    first: 50
+                    filterBy: { since: $since, assignee: null }
+                    orderBy: { field: CREATED_AT, direction: DESC }
+                ) {
+                    totalCount
+                    pageInfo {
+                        hasNextPage
+                    }
+                    nodes {
+                        url
+                        title
+                        number
+                        createdAt
+                    }
+                }
+            }
+        }
+    }
+}
