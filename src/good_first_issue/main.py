@@ -22,6 +22,18 @@ LABELS = ["good first issue"]
 ONE_WEEK_AGO = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=1)
 
 
+class Color:
+    BOLD = "\033[1m"
+    CYAN = "\033[36m"
+    YELLOW = "\033[33m"
+    DIM = "\033[2m"
+    RESET = "\033[0m"
+
+
+def paint(text, *styles):
+    return "".join(styles) + text + Color.RESET
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         prog="good-first-issue",
@@ -70,6 +82,18 @@ def run_query(variables):
     return payload["data"], response.headers
 
 
+def print_repo(repo):
+    name = paint(repo["nameWithOwner"], Color.BOLD, Color.CYAN)
+    stars = paint(f"★ {repo['stargazerCount']}", Color.YELLOW)
+    print(f"\n{name}  {stars}")
+
+    for issue in repo["issues"]["nodes"]:
+        number = paint(f"#{issue['number']}", Color.DIM)
+        print(f"  {number} {issue['title']}")
+        url = paint(issue["url"], Color.DIM)
+        print(f"    {url}")
+
+
 def main():
     args = parse_args()
     search = build_search(args.language, args.min_stars)
@@ -90,16 +114,15 @@ def main():
             if repo["issues"]["totalCount"] == 0:
                 continue
             repos.append(repo)
-            print(f"\n{repo['nameWithOwner']} ({repo['stargazerCount']} stars)")
-            for issue in repo["issues"]["nodes"]:
-                print(f"  #{issue['number']} {issue['title']}\n    {issue['url']}")
+            print_repo(repo)
 
         if not page["pageInfo"]["hasNextPage"]:
             break
         cursor = page["pageInfo"]["endCursor"]
 
-    print(f"\nDone: {len(repos)} repos with matching issues.")
-    print(f"Remaining quota: {int(headers['x-ratelimit-remaining'])}")
+    print(paint(f"\nDone: {len(repos)} repos with matching issues.", Color.BOLD))
+    remaining = paint(str(int(headers["x-ratelimit-remaining"])), Color.YELLOW)
+    print(f"Remaining quota: {remaining}")
 
 
 if __name__ == "__main__":
