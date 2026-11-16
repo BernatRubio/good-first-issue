@@ -1,14 +1,30 @@
 import datetime
+from argparse import Namespace
 
-from .cli import LABELS, build_search, parse_args
+from .cli import LABELS, Language, build_search, parse_args
 from .display import print_repo, print_summary
 from .filters import filter_unwanted_issues
 from .github import run_query
-from .storage.sqlite import init_db, save_issues
+from .storage.sqlite import DEFAULT_DB_PATH, init_db, save_issues
 
 
-def main():
+def main() -> None:
     args = parse_args()
+    _run(args)
+
+
+def main_all() -> None:
+    for lang in Language:
+        args = Namespace(
+            language=lang.value,
+            min_stars=1000,
+            max_age=7,
+            db=DEFAULT_DB_PATH,
+        )
+        _run(args)
+
+
+def _run(args: Namespace) -> None:
     search = build_search(args.language, args.min_stars)
     cutoff = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=args.max_age)
     conn = init_db(args.db)

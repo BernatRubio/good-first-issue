@@ -5,12 +5,12 @@ from .storage.sqlite import DEFAULT_DB_PATH
 
 
 class Language(Enum):
-    PYTHON = "Python"
     CPP = "C++"
+    PYTHON = "Python"
     JAVA = "Java"
+    RUST = "Rust"
     SHELL = "Shell"
     TYPESCRIPT = "Typescript"
-    RUST = "Rust"
 
 
 LANGUAGE_CHOICES = [lang.value for lang in Language]
