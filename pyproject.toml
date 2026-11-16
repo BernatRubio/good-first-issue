@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Bernat Rubio", email = "bernat.github@proton.me" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 dependencies = [
     "datetime>=6.0",
     "dotenv>=0.9.9",
