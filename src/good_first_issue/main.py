@@ -21,7 +21,6 @@ class Language(Enum):
 
 LANGUAGE_CHOICES = [lang.value for lang in Language]
 LABELS = ["good first issue"]
-ONE_WEEK_AGO = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=1)
 
 
 class Color:
@@ -57,6 +56,14 @@ def parse_args():
         help="minimum star count for repositories (default: 1000)",
     )
     parser.add_argument(
+        "-w",
+        "--max-age",
+        type=int,
+        default=7,
+        metavar="DAYS",
+        help="only issues created within the last N days (default: 7)",
+    )
+    parser.add_argument(
         "-o",
         "--db",
         default=DEFAULT_DB_PATH,
@@ -90,6 +97,20 @@ def run_query(variables):
     return payload["data"], response.headers
 
 
+def filter_recent_issues(repo, cutoff):
+    """Keep only issues created at/after cutoff; returns None if none remain."""
+    wanted = [
+        issue
+        for issue in repo["issues"]["nodes"]
+        if datetime.datetime.fromisoformat(issue["createdAt"]) >= cutoff
+    ]
+    if not wanted:
+        return None
+    repo["issues"]["nodes"] = wanted
+    repo["issues"]["totalCount"] = len(wanted)
+    return repo
+
+
 def print_repo(repo):
     name = paint(repo["nameWithOwner"], Color.BOLD, Color.CYAN)
     stars = paint(f"★ {repo['stargazerCount']}", Color.YELLOW)
@@ -105,6 +126,7 @@ def print_repo(repo):
 def main():
     args = parse_args()
     search = build_search(args.language, args.min_stars)
+    cutoff = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=args.max_age)
     conn = init_db(args.db)
 
     cursor, repos = None, []
@@ -114,13 +136,15 @@ def main():
                 "query": search,
                 "cursor": cursor,
                 "labels": LABELS,
-                "since": ONE_WEEK_AGO.isoformat(),
             }
         )
         page = data["search"]
 
         for repo in page["nodes"]:
             if repo["issues"]["totalCount"] == 0:
+                continue
+            repo = filter_recent_issues(repo, cutoff)
+            if repo is None:
                 continue
             repos.append(repo)
             print_repo(repo)

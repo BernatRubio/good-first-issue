@@ -1,9 +1,4 @@
-query FetchIssues(
-    $query: String!
-    $cursor: String
-    $labels: [String!]
-    $since: DateTime!
-) {
+query FetchIssues($query: String!, $cursor: String, $labels: [String!]) {
     search(query: $query, type: REPOSITORY, first: 20, after: $cursor) {
         pageInfo {
             endCursor
@@ -17,7 +12,7 @@ query FetchIssues(
                     labels: $labels
                     states: [OPEN]
                     first: 50
-                    filterBy: { since: $since, assignee: null }
+                    filterBy: { assignee: null }
                     orderBy: { field: CREATED_AT, direction: DESC }
                 ) {
                     totalCount
@@ -29,6 +24,9 @@ query FetchIssues(
                         title
                         number
                         createdAt
+                        comments {
+                            totalCount
+                        }
                     }
                 }
             }
