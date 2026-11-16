@@ -7,6 +7,8 @@ from importlib.resources import files
 import requests
 from dotenv import load_dotenv
 
+from .storage.sqlite import DEFAULT_DB_PATH, init_db, save_issues
+
 
 class Language(Enum):
     PYTHON = "Python"
@@ -54,6 +56,12 @@ def parse_args():
         default=1000,
         help="minimum star count for repositories (default: 1000)",
     )
+    parser.add_argument(
+        "-o",
+        "--db",
+        default=DEFAULT_DB_PATH,
+        help=f"path to the SQLite database (default: {DEFAULT_DB_PATH})",
+    )
     return parser.parse_args()
 
 
@@ -97,6 +105,7 @@ def print_repo(repo):
 def main():
     args = parse_args()
     search = build_search(args.language, args.min_stars)
+    conn = init_db(args.db)
 
     cursor, repos = None, []
     while True:
@@ -119,6 +128,9 @@ def main():
         if not page["pageInfo"]["hasNextPage"]:
             break
         cursor = page["pageInfo"]["endCursor"]
+
+    save_issues(conn, repos, args.language)
+    conn.close()
 
     print(paint(f"\nDone: {len(repos)} repos with matching issues.", Color.BOLD))
     remaining = paint(str(int(headers["x-ratelimit-remaining"])), Color.YELLOW)
