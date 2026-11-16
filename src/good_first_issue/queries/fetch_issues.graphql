@@ -24,7 +24,7 @@ query FetchIssues($query: String!, $cursor: String, $labels: [String!]) {
                         title
                         number
                         createdAt
-                        comments {
+                        closedByPullRequestsReferences(first: 1) {
                             totalCount
                         }
                     }
