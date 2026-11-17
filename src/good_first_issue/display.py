@@ -20,6 +20,6 @@ def print_repo(repo: dict) -> None:
         print(f"    {paint(issue['url'], Color.DIM)}")
 
 
-def print_summary(repo_count: int, quota_remaining: int) -> None:
-    print(paint(f"\nDone: {repo_count} repos with matching issues.", Color.BOLD))
+def print_summary(repo_count: int, issue_count: int, quota_remaining: int) -> None:
+    print(paint(f"\nDone: Processed {repo_count} repos with {issue_count} good first issues.", Color.BOLD))
     print(f"Remaining quota: {paint(str(quota_remaining), Color.YELLOW)}")
