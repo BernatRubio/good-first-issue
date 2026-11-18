@@ -1,46 +1,50 @@
 import datetime
-from argparse import Namespace
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .cli import LABELS, Language, build_search, parse_args
 from .display import print_repo, print_summary
 from .filters import filter_unwanted_issues
 from .github import run_query
-from .storage.sqlite import DEFAULT_DB_PATH, init_db, save_issues
+from .storage.sqlite import init_db, save_issues
 
 
 def main() -> None:
-    args = parse_args()
-    total_issues, total_repos, rate_limit_remaining = _run(args)
-    print_summary(total_repos, total_issues, rate_limit_remaining)
-
-
-def main_all() -> None:
     total_issues = 0
     total_repos = 0
     rate_limit_remaining = 5000
 
-    with ThreadPoolExecutor(max_workers=len(Language)) as executor:
+    args = parse_args()
+    if args.all:
+        args.language = [l.value for l in Language]
+
+    with ThreadPoolExecutor(max_workers=len(args.language)) as executor:
         futures = {
-            executor.submit(_run, Namespace(language=lang.value,min_stars=1000,max_age=7,db=DEFAULT_DB_PATH)): lang
-            for lang in Language
+            executor.submit(
+                _run,
+                language,
+                args.min_stars,
+                args.max_age,
+                args.db,
+            ): language
+            for language in args.language
         }
         for future in as_completed(futures):
             try:
-                repos_processed, issues_processed, remaining_rate_limit = future.result()
+                repos_processed, issues_processed, remaining_rate_limit = (
+                    future.result()
+                )
                 total_issues += issues_processed
                 total_repos += repos_processed
                 rate_limit_remaining = min(rate_limit_remaining, remaining_rate_limit)
             except Exception as e:
-                print(
-                    f"An error occurred while processing {futures[future]}: {e}"
-                )
+                print(f"An error occurred while processing {futures[future]}: {e}")
     print_summary(total_repos, total_issues, rate_limit_remaining)
 
-def _run(args: Namespace) -> tuple[int, int, int]:
-    search = build_search(args.language, args.min_stars)
-    cutoff = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=args.max_age)
-    conn = init_db(args.db)
+
+def _run(language: str, min_stars: int, max_age: int, db: str) -> tuple[int, int, int]:
+    search = build_search(language, min_stars)
+    cutoff = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=max_age)
+    conn = init_db(db)
 
     cursor, repos = None, []
     while True:
@@ -60,7 +64,7 @@ def _run(args: Namespace) -> tuple[int, int, int]:
             break
         cursor = page["pageInfo"]["endCursor"]
 
-    save_issues(conn, repos, args.language)
+    save_issues(conn, repos, language)
     conn.close()
 
     total_issues = 0

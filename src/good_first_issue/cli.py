@@ -5,12 +5,12 @@ from .storage.sqlite import DEFAULT_DB_PATH
 
 
 class Language(Enum):
-    CPP = "C++"
-    PYTHON = "Python"
-    JAVA = "Java"
-    RUST = "Rust"
-    SHELL = "Shell"
-    TYPESCRIPT = "Typescript"
+    CPP = "c++"
+    PYTHON = "python"
+    JAVA = "java"
+    RUST = "rust"
+    SHELL = "shell"
+    TYPESCRIPT = "typescript"
 
 
 LANGUAGE_CHOICES = [lang.value for lang in Language]
@@ -25,34 +25,40 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "-l",
         "--language",
+        nargs='+',
         choices=LANGUAGE_CHOICES,
-        default=Language.PYTHON.value,
+        type=str.lower,
+        default=[Language.PYTHON.value],
         metavar="LANG",
-        help=f"language to search (default: {Language.PYTHON.value})",
+        help=f"Language to search (default: {Language.PYTHON.value})",
     )
     parser.add_argument(
         "-m",
         "--min-stars",
         type=int,
         default=1000,
-        help="minimum star count (default: 1000)",
+        help="Minimum star count (default: 1000)",
+        dest="min_stars"
     )
     parser.add_argument(
-        "-w",
         "--max-age",
         type=int,
         default=7,
         metavar="DAYS",
-        help="only issues created within the last N days (default: 7)",
+        help="Display issues created within the last N days (default: 7)",
     )
     parser.add_argument(
-        "-o",
         "--db",
         default=DEFAULT_DB_PATH,
-        help=f"path to SQLite database (default: {DEFAULT_DB_PATH})",
+        help=f"Path to output SQLite database (default: {DEFAULT_DB_PATH})",
+    )
+    parser.add_argument(
+        '--all',
+        action='store_true',
+        help='Get issues for all languages'
     )
     return parser.parse_args()
 
 
 def build_search(language: str, min_stars: int) -> str:
-    return f'language:"{language.lower()}" stars:>{min_stars} sort:stars'
+    return f'language:"{language}" stars:>{min_stars} sort:stars'

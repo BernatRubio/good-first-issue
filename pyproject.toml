@@ -3,19 +3,12 @@ name = "good-first-issue"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-authors = [
-    { name = "Bernat Rubio", email = "bernat.github@proton.me" }
-]
+authors = [{ name = "Bernat Rubio", email = "bernat.github@proton.me" }]
 requires-python = ">=3.15"
-dependencies = [
-    "datetime>=6.0",
-    "dotenv>=0.9.9",
-    "requests>=2.34.2",
-]
+dependencies = ["datetime>=6.0", "dotenv>=0.9.9", "requests>=2.34.2"]
 
 [project.scripts]
 good-first-issue = "good_first_issue.main:main"
-good-first-issue-all = "good_first_issue.main:main_all"
 
 [build-system]
 requires = ["uv_build>=0.13.5,<0.14.0"]
